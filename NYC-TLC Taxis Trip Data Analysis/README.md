@@ -14,8 +14,8 @@ By aggregating the aforementioned records this dataset was created that provides
 4. Uploaded the data to S3 via command line [command: aws s3 cp filename s3://bucketname/]
 
 ### Link to downlaod the dataset:
-[ https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2017-11.csv ]
-[ https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2017-12.csv ]
+* https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2017-11.csv
+* https://s3.amazonaws.com/nyc-tlc/trip+data/yellow_tripdata_2017-12.csv
 
 
 ## Basic Data Quality Checks:
