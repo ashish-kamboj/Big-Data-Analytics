@@ -1,0 +1,314 @@
+## Creating tables::
+
+/* -------------------- Creating table for November data------------------ */
+
+	create external table if not exists yellow_trip_data_nov_s3 (VendorID tinyint,tpep_pickup_datetime string,tpep_dropoff_datetime string,passenger_count tinyint,trip_distance float,RatecodeID tinyint,
+	store_and_fwd_flag char(1),PULocationID smallint,DOLocationID smallint,payment_type float,fare_amount float,extra float,mta_tax float,tip_amount float,
+	tolls_amount float,improvement_surcharge float,total_amount float)
+	ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+	location 's3://bigdata-analysis/data-ingestion-assignment/nov-data'
+	tblproperties ("skip.header.line.count"="2");
+
+/* -------------------- Creating table for December data------------------ */
+
+	create external table if not exists yellow_trip_data_dec_s3 (VendorID tinyint,tpep_pickup_datetime string,tpep_dropoff_datetime string,passenger_count tinyint,trip_distance float,RatecodeID tinyint,
+	store_and_fwd_flag char(1),PULocationID smallint,DOLocationID smallint,payment_type float,fare_amount float,extra float,mta_tax float,tip_amount float,
+	tolls_amount float,improvement_surcharge float,total_amount float)
+	ROW FORMAT DELIMITED FIELDS TERMINATED BY ','
+	location 's3://bigdata-analysis/data-ingestion-assignment/dec-data'
+	tblproperties ("skip.header.line.count"="2");
+
+/*----------------- Combining Nov and Dec data------------------------------*/ 
+
+	create table yellow_trip_data_s3 as(
+	select * from yellow_trip_data_nov_s3  
+	UNION ALL  
+	select  * from yellow_trip_data_dec_s3);
+
+	/*----------------- Displaying Data -----------------------------------*/ 
+	select * from yellow_trip_data_s3 limit 100;
+
+
+
+	
+## Basic Data Quality Checks::
+
+/*--------------------------------------------------------------------------*/ 
+1. How many records has each TPEP provider provided? Write a query that summarises the number of records of each provider.
+
+	select vendorid,count(*) as counts from yellow_trip_data_s3 group by vendorid;
+	
+	
+/*--------------------------------------------------------------------------*/ 
+2. The data provided is for months November and December only. Check whether the data is consistent, and if not, identify the data quality issues. 
+   Mention all data quality issues in comments.
+   
+    ---------------------------------------------------------------------------
+	select distinct month(tpep_pickup_datetime) as month from yellow_trip_data_s3;
+	-- we have Jan, Feb, Mar and Oct along with Nov and Dec data, needs to filter those records --
+
+	---------------------------------------------------------------------------
+	select distinct year(tpep_pickup_datetime) as year from yellow_trip_data_s3;
+	-- data is present for year : 2001,2003,2008,2009,2018,2041, along with the 2017 data, neess to filter those records --
+
+	---------------------------------------------------------------------------
+	select distinct year(tpep_pickup_datetime) as year from yellow_trip_data_s3	
+	where month(tpep_pickup_datetime) in (11,12);
+	-- we have data for years 2008 and 2041 along with the 2007 year data, so we have to filter those records --
+
+	---------------------------------------------------------------------------
+	select distinct year(tpep_dropoff_datetime) as year from yellow_trip_data_s3	
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017;
+	-- we have years : 2016, 2017, 2018, 2019 --
+
+	---------------------------------------------------------------------------
+	select distinct month(tpep_dropoff_datetime) as month from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018);
+	-- dropoff months are Nov, Dec and Jab-18, that fine --
+
+	---------------------------------------------------------------------------
+	select  count(*) from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018) and 
+	trip_distance=0; ---120005 records
+
+	---------------------------------------------------------------------------
+	select  count(*) from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018) and 
+	passenger_count=0; --108970 records
+
+	---------------------------------------------------------------------------
+	select  distinct ratecodeid from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018);
+	-- we have ratecode id value as 99 --
+
+	---------------------------------------------------------------------------
+	select  count(*) from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018) and 
+	fare_amount<0; --9372 records
+
+	---------------------------------------------------------------------------
+	select  count(*) from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018) and 
+	fare_amount=0; --5180 records
+
+	---------------------------------------------------------------------------
+	select  count(*) from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018) and 
+	tip_amount<0; --97 records
+
+	---------------------------------------------------------------------------
+	select  count(*) from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018) and 
+	total_amount<0; --9372 records
+
+	---------------------------------------------------------------------------
+	select  count(*) from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018) and 
+	total_amount=0; --2122 records
+
+
+/*--------------------------------------------------------------------------*/ 	
+3. You might have encountered unusual or erroneous rows in the dataset. Can you conclude which vendor is doing a bad job in providing the records?
+
+	select vendorid, month(tpep_pickup_datetime) as month, count(*) as counts from yellow_trip_data_s3
+	group by vendorid, month(tpep_pickup_datetime)
+	order by vendorid, month;
+	-- vendorid=2 is providing extra/unrelevant data --
+
+	---------------------------------------------------------------------------
+	select vendorid, year(tpep_pickup_datetime) as year, count(*) as counts from yellow_trip_data_s3
+	group by vendorid, year(tpep_pickup_datetime)
+	order by vendorid, year;
+	-- vendorid=2 is providing the data for the years other that 2017 --
+
+	---------------------------------------------------------------------------
+	select vendorid, year(tpep_pickup_datetime) as year, count(*) as counts from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12)
+	group by vendorid, year(tpep_pickup_datetime)
+	order by vendorid, year;
+	-- vendorid=2 is providing the data for the years other that 2017 --
+
+	---------------------------------------------------------------------------
+	select vendorid, year(tpep_dropoff_datetime) as year, count(*) as counts from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017
+	group by vendorid, year(tpep_dropoff_datetime)
+	order by vendorid, year;
+	-- vendorid=1 has provided few bad records --
+
+	---------------------------------------------------------------------------
+	select vendorid, month(tpep_dropoff_datetime) as month, count(*) as counts from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018)
+	group by vendorid, month(tpep_dropoff_datetime)
+	order by vendorid, month;
+	-- we're good here doesn't seem to be any bad records --
+
+	---------------------------------------------------------------------------
+	select vendorid, count(*) as counts from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018) and trip_distance=0
+	group by vendorid;
+	--vendorid=1 has provided more records with trip_distance=0 --
+
+	---------------------------------------------------------------------------
+	select vendorid, count(*) as counts from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018) and passenger_count=0 
+	group by vendorid;
+	-- vendorid=1 has provided more records with passenger_count=0 --
+
+	---------------------------------------------------------------------------
+	select vendorid, count(*) as counts from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018) and ratecodeid=99
+	group by vendorid;
+	-- vendorid=1 has provided more bad records with ratecodeid=99 --
+
+	---------------------------------------------------------------------------
+	select vendorid, count(*) as counts from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018) and fare_amount<0
+	group by vendorid;
+	-- only vendorid=2 has provided bad records with fare_amount<0 --
+
+	---------------------------------------------------------------------------
+	select vendorid, count(*) as counts from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018) and fare_amount=0
+	group by vendorid;
+	-- vendorid=1 has provided more bad records with fare_amount=0 --
+
+	---------------------------------------------------------------------------
+	select vendorid, count(*) as counts from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018) and tip_amount<0
+	group by vendorid;
+	-- only vendorid=2 has provided bad records with tip_amount<0 --
+
+	---------------------------------------------------------------------------
+	select vendorid, count(*) as counts from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018) and total_amount<0
+	group by vendorid;
+	-- only vendorid=2 has provided bad records with total_amount<0 --
+
+	---------------------------------------------------------------------------
+	select vendorid, count(*) as counts from yellow_trip_data_s3
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018) and total_amount=0
+	group by vendorid;
+	-- vendorid=2 has provided more bad records with total_amount=0 --
+	
+	/* Vendorid=2 has provided the most of the bad data--
+
+	
+/*--------------------------------------------------------------------------*/ 
+## create a table after removing the unwanted or bad data (of month and year) , as we discovered in the above analysis
+
+	create table yellow_trip_data_final_s3 as (
+	select * from yellow_trip_data_s3 
+	where month(tpep_pickup_datetime) in (11,12) and year(tpep_pickup_datetime)=2017 and year(tpep_dropoff_datetime) in (2017,2018));
+
+
+## Analysis-I::
+
+/*--------------------------------------------------------------------------*/ 
+1. Compare the average fare for November and December.
+
+	select month(tpep_pickup_datetime) as month, round(avg(fare_amount),2) as average_fare from yellow_trip_data_final_s3
+	where fare_amount>0
+	group by month(tpep_pickup_datetime);
+	
+/*--------------------------------------------------------------------------*/ 	
+2. Explore the ‘number of passengers per trip’ - how many trips are made by each level of ‘Passenger_count’? Do most people travel solo or with other people?
+
+	select passenger_count, count(*) as counts from yellow_trip_data_final_s3 
+	where passenger_count!=0
+	group by passenger_count
+	order by passenger_count;
+
+/*--------------------------------------------------------------------------*/ 	
+3. Which is the most preferred mode of payment?
+
+	select payment_type, count(*) as counts from yellow_trip_data_final_s3
+	group by payment_type
+	order by payment_type;
+
+/*--------------------------------------------------------------------------*/ 	
+4. What is the average tip paid? Compare the average tip with the 25th, 50th and 75th percentiles and comment 
+   whether the ‘average tip’ is a representative statistic (of the central tendency) of ‘tip amount paid’.
+   
+	select round(avg(tip_amount),2) as average, round(percentile_approx(tip_amount, 0.25),2) as 25th_percentile, 
+	round(percentile_approx(tip_amount ,0.50),2) as 50th_percentile, round(percentile_approx(tip_amount ,0.75),2) as 75th_percentile
+	from yellow_trip_data_final_s3
+	where tip_amount>=0;
+	-- average_tip is higher than the 50th percentile, so it's not a representative statistic (of the central tendency) of ‘tip amount paid’
+	
+/*--------------------------------------------------------------------------*/ 	
+5. Explore the ‘Extra’ (charge) variable - what is the fraction of total trips where an extra charge is levied?
+
+ 	SELECT round(SUM( IF( extra == 0.0, 0 , 1 ) )/ COUNT(*) * 100,2) as total_trips_percentage_with_extra_charge
+	FROM yellow_trip_data_final_s3;
+	
+	
+	
+## Analysis-II::
+
+/*--------------------------------------------------------------------------*/ 
+1. What is the correlation between the number of passengers and tip paid? 
+
+ 	select round(corr(passenger_count,tip_amount),4) as correlation 
+	from yellow_trip_data_final_s3 
+	where passenger_count!=0 and tip_amount>=0;
+	
+	/*--------------------------------------------------------------------------*/ 
+	Do multiple travellers pay more compared to solo travellers?
+	
+	select passenger_count,round(avg(tip_amount),2) as average_tip_amount 
+	from yellow_trip_data_final_s3 
+	where passenger_count!=0
+	group by passenger_count
+	order by passenger_count;
+	--multiple travellers
+	
+/*--------------------------------------------------------------------------*/ 	
+2. Create five buckets of ‘tip paid’: [0-5), [5-10), [10-15) , [15-20) and >=20. 
+   Calculate the percentage share of each bucket (i.e. the fraction of trips falling in each bucket).
+   
+    /*------------------ Created five buckets of ‘tip paid’----------------------*/   
+	create table tip_amount_bucket_counts as (
+	select tip_amount,
+            case   
+            when (tip_amount >= 0  and tip_amount < 5)  then '[0-5)'
+            when (tip_amount >= 5  and tip_amount < 10) then '[5-10)'
+            when (tip_amount >= 10 and tip_amount < 15) then '[10-15)'
+            when (tip_amount >= 15 and tip_amount < 20) then '[15-20)'
+            when (tip_amount >= 20) THEN '>=20'
+            end as tip_amount_bucket
+	from yellow_trip_data_final_s3
+	where tip_amount>=0);
+	
+	/*------------------ Percentage share of each bucket-------------------------*/  
+	select tip_amount_bucket, round(count(*) * 100.0 / sum(count(*)) over(),2) as percentage_share
+	from tip_amount_bucket_counts
+	group by tip_amount_bucket ;
+	
+	
+   
+ /*--------------------------------------------------------------------------*/   
+3. Which month has a greater average ‘speed’ - November or December? Note that the variable ‘speed’ will have to be derived from other metrics.
+
+	select month(tpep_pickup_datetime) as month, 
+	round(avg(trip_distance/((unix_timestamp(tpep_dropoff_datetime) - unix_timestamp(tpep_pickup_datetime))/3600)),2) as average_speed
+	from yellow_trip_data_final_s3
+	where trip_distance!=0
+	group by month(tpep_pickup_datetime);
+	-- speed unit is in - miles/hr
+	
+/*--------------------------------------------------------------------------*/ 	
+4. Analyse the average speed of the most happening days of the year i.e. 31st December (New year’s eve) and 25th December (Christmas Eve) and 
+   compare it with the overall average.
+   
+	select day(tpep_pickup_datetime) as day_of_december, round(avg(trip_distance/((unix_timestamp(tpep_dropoff_datetime) - unix_timestamp(tpep_pickup_datetime))/3600)),2) as average_speed 
+	from yellow_trip_data_final_s3 
+	where month(tpep_pickup_datetime)=12 and day(tpep_pickup_datetime) in (25,31) and trip_distance!=0
+	group by day(tpep_pickup_datetime);
+	
+	/*-------------------- overall speed average ----------------------------*/ 	
+	select round(avg(trip_distance/((unix_timestamp(tpep_dropoff_datetime) - unix_timestamp(tpep_pickup_datetime))/3600)),2) as average_speed
+	from yellow_trip_data_final_s3
+	where trip_distance!=0;
+	
+	--total average speed is less compare to the 25th and 31st December
+   
