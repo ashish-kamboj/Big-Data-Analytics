@@ -1,11 +1,9 @@
 # Problem Statement:
-
 New York City is a thriving metropolis. Just like most other metros that size, one of the biggest problems its citizens face, is parking. The classic combination of a huge number of cars, and a cramped geography is the exact recipe that leads to a huge number of parking tickets. In an attempt to scientifically analyse this phenomenon, the NYC Police Department has collected data for parking tickets. 
 
 Need to compare phenomenon related to parking tickets over three different years - 2015, 2016, 2017.
 
 # Uploading data into S3:
-
 **Dataset** used for analysis is vailable on Kaggle. Link- [https://www.kaggle.com/new-york-city/nyc-parking-tickets/data]
 **Data Dictonary** - [https://www.kaggle.com/new-york-city/nyc-parking-tickets/data]
 
@@ -15,18 +13,17 @@ Below are the steps to upload the kaggle dataset into S3-
 2. Transfered the cookies file to the EC2 instance using the command [scp -i /path/my-key-pair.pem /path/cookies.txt user-name@ec2-xxx-xx-xxx-x.compute-1.amazonaws.com:~]. We can also copy the file using WinSCP.
 3. Connected to the Master node using SSH through PuTTY and PuTTYGen
 4. From the terminal used the belowcommand to download the dataset into the EC2 instance.
-[wget -x --load-cookies cookies.txt https://www.kaggle.com/new-york-city/nyc-parking-tickets/downloads/Parking_Violations_Issued_-_Fiscal_Year_2015.csv/2]
-[wget -x --load-cookies cookies.txt https://www.kaggle.com/new-york-city/nyc-parking-tickets/downloads/Parking_Violations_Issued_-_Fiscal_Year_2016.csv/2]
-[wget -x --load-cookies cookies.txt https://www.kaggle.com/new-york-city/nyc-parking-tickets/downloads/Parking_Violations_Issued_-_Fiscal_Year_2017.csv/2]
+wget -x --load-cookies cookies.txt https://www.kaggle.com/new-york-city/nyc-parking-tickets/downloads/Parking_Violations_Issued_-_Fiscal_Year_2015.csv/2
+wget -x --load-cookies cookies.txt https://www.kaggle.com/new-york-city/nyc-parking-tickets/downloads/Parking_Violations_Issued_-_Fiscal_Year_2016.csv/2
+wget -x --load-cookies cookies.txt https://www.kaggle.com/new-york-city/nyc-parking-tickets/downloads/Parking_Violations_Issued_-_Fiscal_Year_2017.csv/2
 
 5. Uploaded the data to S3 via command line 
-[command: aws s3 cp Parking_Violations_Issued_-_Fiscal_Year_2015.csv s3://bigdata-analytics/spark-analysis/2015/]
-[command: aws s3 cp Parking_Violations_Issued_-_Fiscal_Year_2016.csv s3://bigdata-analytics/spark-analysis/2016/]
-[command: aws s3 cp Parking_Violations_Issued_-_Fiscal_Year_2017.csv s3://bigdata-analytics/spark-analysis/2017/]
+command: aws s3 cp Parking_Violations_Issued_-_Fiscal_Year_2015.csv s3://bigdata-analytics/spark-analysis/2015/
+command: aws s3 cp Parking_Violations_Issued_-_Fiscal_Year_2016.csv s3://bigdata-analytics/spark-analysis/2016/
+command: aws s3 cp Parking_Violations_Issued_-_Fiscal_Year_2017.csv s3://bigdata-analytics/spark-analysis/2017/
 
 
 # Exploratory Data Analysis Using Apache Spark:
-
 1. Dataset used: Year- 2015, 2016, 2017
 2. Spark allowed to analyse the full files at high speeds
 3. Libraries Used - SparkR, ggplot2
