@@ -5,7 +5,7 @@ Need to compare phenomenon related to parking tickets over three different years
 
 
 ## Uploading data into S3:
-**Dataset** used for analysis is vailable on Kaggle. Link- [https://www.kaggle.com/new-york-city/nyc-parking-tickets/data]
+**Dataset** used for analysis is vailable on Kaggle. Link- [https://www.kaggle.com/new-york-city/nyc-parking-tickets/data].
 **Data Dictonary** - [https://www.kaggle.com/new-york-city/nyc-parking-tickets/data]
 
 Below are the steps to upload the kaggle dataset into S3-
@@ -14,14 +14,14 @@ Below are the steps to upload the kaggle dataset into S3-
 2. Transfered the cookies file to the EC2 instance using the command [scp -i /path/my-key-pair.pem /path/cookies.txt user-name@ec2-xxx-xx-xxx-x.compute-1.amazonaws.com:~]. We can also copy the file using WinSCP.
 3. Connected to the Master node using SSH through PuTTY and PuTTYGen
 4. From the terminal used the belowcommand to download the dataset into the EC2 instance.
-wget -x --load-cookies cookies.txt https://www.kaggle.com/new-york-city/nyc-parking-tickets/downloads/Parking_Violations_Issued_-_Fiscal_Year_2015.csv/2
-wget -x --load-cookies cookies.txt https://www.kaggle.com/new-york-city/nyc-parking-tickets/downloads/Parking_Violations_Issued_-_Fiscal_Year_2016.csv/2
-wget -x --load-cookies cookies.txt https://www.kaggle.com/new-york-city/nyc-parking-tickets/downloads/Parking_Violations_Issued_-_Fiscal_Year_2017.csv/2
+	- wget -x --load-cookies cookies.txt https://www.kaggle.com/new-york-city/nyc-parking-tickets/downloads/Parking_Violations_Issued_-_Fiscal_Year_2015.csv/2
+	- wget -x --load-cookies cookies.txt https://www.kaggle.com/new-york-city/nyc-parking tickets/downloads/Parking_Violations_Issued_-_Fiscal_Year_2016.csv/2
+	- wget -x --load-cookies cookies.txt https://www.kaggle.com/new-york-city/nyc-parking-tickets/downloads/Parking_Violations_Issued_-_Fiscal_Year_2017.csv/2
 
 5. Uploaded the data to S3 via command line 
- * aws s3 cp Parking_Violations_Issued_-_Fiscal_Year_2015.csv s3://bigdata-analytics/spark-analysis/2015/
- * aws s3 cp Parking_Violations_Issued_-_Fiscal_Year_2016.csv s3://bigdata-analytics/spark-analysis/2016/
- * aws s3 cp Parking_Violations_Issued_-_Fiscal_Year_2017.csv s3://bigdata-analytics/spark-analysis/2017/
+	- aws s3 cp Parking_Violations_Issued_-_Fiscal_Year_2015.csv s3://bigdata-analytics/spark-analysis/2015/
+	- aws s3 cp Parking_Violations_Issued_-_Fiscal_Year_2016.csv s3://bigdata-analytics/spark-analysis/2016/
+	- aws s3 cp Parking_Violations_Issued_-_Fiscal_Year_2017.csv s3://bigdata-analytics/spark-analysis/2017/
 
 
 ## Exploratory Data Analysis Using Apache Spark:
