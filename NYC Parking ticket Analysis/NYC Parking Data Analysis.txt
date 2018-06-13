@@ -1,0 +1,125 @@
+I've performed the EDA for NYC Parking Dataset for the Years : 2015, 2016 and 2017
+
+1. Performed the Basic data analysis i.e. checked for the missing ot Null values. Also, checked for the columns containing unique values.
+
+2. Checked for the total Ticket counts. Below is the summary for years:
+=======================================================================
+	2015 : 11809233
+	2016 : 10626899
+	2017 : 10803028
+
+3. Checked the dataset for the corresponding year value (i.e. NYC_2015 dataset should tickets data of 2015 year only). Removed the other years data if present.
+
+4. Address Assumption:
+	2015 : Combination of 'House Number' and 'Street Name'
+	2016 : Combination of 'House Number', 'Street Name' and 'Intersecting Street'
+	2017 : Combination of 'House Number', 'Street Name' and 'Intersecting Street'
+
+4. Toatal distict State Counts:
+===============================
+	2015 : 68
+	2016 : 67
+	2017 : 65
+
+5. Top3 Violation Code:
+=======================
+	2015 : 21, 38, 14
+	2016 : 21,36,38
+	2017 : 21,36,38
+
+6. Maximum Vechicle Body Type Counts:
+=====================================
+	2015 : SUBN
+	2016 : SUBN
+	2017 : SUBN
+
+7. Top3 Vehicle make Counts:
+============================
+	2015 : FORD, TOYOT, HONDA
+	2016 : FORD, TOYOT, HONDA
+	2017 : FORD, TOYOT, HONDA
+
+8. Top3 Violation Precinct Counts:
+==================================
+	2015 : 19, 14, 18 (filtered out Issuer Precinct =0)
+	2016 : 0,19, 18
+	2017 : 19, 14,1 (filtered out Issuer Precinct =0)
+
+9. Top3 Issuer Precinct Counts:
+================================
+	2015 : 19, 18, 14 (filtered out Issuer Precinct =0)
+	2016 : 0,19, 13
+	2017 : 19, 14,1 (filtered out Issuer Precinct =0)
+
+
+10. Summary:
+
+2015:
+=====
+#violation_code  average fine  no. of tickets  total 
+#  21            55             809914        44545270
+#  38            50             746562        37328100 
+#  14            115            517733        59539295
+
+2016:
+=====
+#   Violation Code    count       AVG FINE      TOTAL FINE 
+#1             21     664947        55            36572085
+#2             36     615242        50            30762100  
+#3             38     547080        50            27354000
+
+
+2017:
+=====
+# Voilation code    No. of Tickets    Average Fine    Total Fine
+#   21                  768087            55            42244785
+#   36                  662765            50            33138250
+#   38                  542071            50            27103550
+
+
+11. Toatal Amount collected:
+============================
+	2015 : Is higher for violation_code 14 ($59539295)
+	2016 : Is higher for violation_code 21 ($36572085)
+	2017 : Is higher for violation_code 21 ($42244785)
+
+
+12. Season Binning:
+===================
+	Bin1 : Months - 12, 1, 2
+	Bin2 : Months - 3, 4, 5
+	Bin3 : Months - 6, 7, 8	
+	Bin4 : Months - 9, 10, 11
+
+13. Hours Binning:
+==================
+
+2015:
+======
+WHEN time_in_hour < 4 then 1
+when time_in_hour < 8 then 2
+when time_in_hour < 12 then 3
+when time_in_hour < 16 then 4
+when time_in_hour < 20 then 5
+else 6
+
+2016:
+======
+WHEN Hour < 04 then 'Late_Night'
+when Hour < 08 then 'Early_Morning'
+when Hour < 12 then  'Morning'
+when Hour < 16 then  'Afternoon'
+when Hour < 20 then 'Evening'
+else 'Night'
+
+2017:
+=====
+when Time_In_Hour <=4 then 1
+when (Time_In_Hour >4 and Time_In_Hour <=8) then 2
+when (Time_In_Hour >8 and Time_In_Hour <=12) then 3
+when (Time_In_Hour >12 and Time_In_Hour <=16) then 4
+when (Time_In_Hour >16 and Time_In_Hour <=20)  then 5
+else 6
+
+
+
